@@ -67,6 +67,12 @@ def divisionStandings(bot, trigger):
         msg = "Options: Metro(politan), Atlantic, Central, Pacific"
     bot.say(msg)
 
+@module.commands('nhl_games')
+def currentGameScores(bot, trigger):
+    """ Gets the scores of all games scheduled to start today """
+    msg = getCurrentGameScores()
+    bot.say(msg)
+
 # team stats (gp, win, loss, ot)
 def getTeamStats(teamid):
     req = "https://statsapi.web.nhl.com/api/v1/teams/"+str(teamid)+"/stats"
@@ -121,6 +127,46 @@ def getDivision(teamid):
     team_info_json = r.text
     team_info = json.loads(team_info_json)
     return(team_info['teams'][0]['division']['id'])
+
+# get team abbreviation from ID
+def getTeamAbbr(ID):
+    teams = {
+            "NJD" : 1,
+            "NYI" : 2,
+            "NYR" : 3,
+            "PHI" : 4,
+            "PIT" : 5,
+            "BOS" : 6,
+            "BUF" : 7,
+            "MTL" : 8,
+            "OTT" : 9,
+            "TOR" : 10,
+            "CAR" : 12,
+            "FLA" : 13,
+            "TBL" : 14,
+            "WSH" : 15,
+            "CHI" : 16,
+            "DET" : 17,
+            "NSH" : 18,
+            "STL" : 19,
+            "CGY" : 20,
+            "COL" : 21,
+            "EDM" : 22,
+            "VAN" : 23,
+            "ANA" : 24,
+            "DAL" : 25,
+            "LAK" : 26,
+            "SJS" : 28,
+            "CBJ" : 29,
+            "MIN" : 30,
+            "WPG" : 52,
+            "ARI" : 53,
+            "VGK" : 54
+            }
+    for team, teamId in teams.items():
+        if teamId == ID:
+            ret = team
+    return ret
 
 # get team ID from abbreviation
 def getTeamId(abbreviation):
@@ -207,3 +253,62 @@ def getStandings():
 def getDivisionStandings(did):
     # getStandings() needs to be called to make sure data is fresh
     return divisionData[did] 
+
+# get the scores of today's games
+def getCurrentGameScores():
+    req = "https://statsapi.web.nhl.com/api/v1/schedule"
+    r = requests.get(req)
+    ret = ''
+
+    game_list_json = r.text
+    game_list = json.loads(game_list_json)
+
+    i = 0
+    limit = len(game_list['dates'][0]['games']) - 1
+    for game in game_list['dates'][0]['games']:
+        gameStatus = game['status']['abstractGameState']
+        if gameStatus == 'Live':
+            team_away_id = game['teams']['away']['team']['id']
+            team_home_id = game['teams']['home']['team']['id']
+            team_away_name = game['teams']['away']['team']['name']
+            team_home_name = game['teams']['home']['team']['name']
+            team_away_score = game['teams']['away']['score']
+            team_home_score = game['teams']['home']['score']
+            team_away_abbr = getTeamAbbr(team_away_id)
+            team_home_abbr = getTeamAbbr(team_home_id)
+            msg = "\x02%s\x02@\x02%s\x02 %s-%s" % (team_away_abbr, team_home_abbr, team_away_score, team_home_score)
+            print("live:"+msg)
+        elif gameStatus == 'Final':
+            team_away_name = game['teams']['away']['team']['name']
+            team_home_name = game['teams']['home']['team']['name']
+            team_away_id = game['teams']['away']['team']['id']
+            team_home_id = game['teams']['home']['team']['id']
+            team_away_score = game['teams']['away']['score']
+            team_home_score = game['teams']['home']['score']
+            team_away_abbr = getTeamAbbr(team_away_id)
+            team_home_abbr = getTeamAbbr(team_home_id)
+            msg = "\x02%s\x02@\x02%s\x02 %s-%s Final" % (team_away_abbr, team_home_abbr, team_away_score, team_home_score)
+            print("final:"+msg)
+        else:
+            game_state = game['status']['detailedState']
+            team_away_name = game['teams']['away']['team']['name']
+            team_home_name = game['teams']['home']['team']['name']
+            team_away_id = game['teams']['away']['team']['id']
+            team_home_id = game['teams']['home']['team']['id']
+            team_away_score = game['teams']['away']['score']
+            team_home_score = game['teams']['home']['score']
+            team_away_abbr = getTeamAbbr(team_away_id)
+            team_home_abbr = getTeamAbbr(team_home_id)
+            msg = "%s@%s" % (team_away_abbr, team_home_abbr)
+            print("other:"+msg)
+        if i == 0:
+            ret += msg
+            ret += " / "
+        elif i == limit:
+            ret += msg
+        else:
+            ret += msg
+            ret += " / "
+        i += 1
+    print(ret)
+    return ret
