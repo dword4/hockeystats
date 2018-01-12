@@ -5,9 +5,9 @@ import requests
 import json
 import arrow
 
-@module.commands('teamstats')
+@module.commands('nhl_teamstats')
 def teamStats(bot, trigger):
-    """ Gets team stats including games played, wins, losses ot. usage: !teamstats WSH """
+    """ Gets team stats including games played, wins, losses ot. usage: !nhl_teamstats WSH """
     tmpTeam = trigger.group(2)
     teamName = tmpTeam.split()
     try:
@@ -20,9 +20,9 @@ def teamStats(bot, trigger):
         bot.say("unable to find team id")
     bot.say(msg)
 
-@module.commands('lastgame')
+@module.commands('nhl_lastgame')
 def pGame(bot, trigger):
-    """ Gets last game information for a team. usage: !lastgame TOR """
+    """ Gets last game information for a team. usage: !nhl_lastgame TOR """
     tmpTeam = trigger.group(2)
     teamName = tmpTeam.split()
     try:
@@ -35,9 +35,9 @@ def pGame(bot, trigger):
         bot.say("unable to find team id")
     bot.say(msg)
 
-@module.commands('nextgame')
+@module.commands('nhl_nextgame')
 def nGame(bot, trigger):
-    """ Gets next game information for a team. usage: !nextgame MTL """
+    """ Gets next game information for a team. usage: !nhl_nextgame MTL """
     tmpTeam = trigger.group(2)
     teamName = tmpTeam.split()
     try:
@@ -50,9 +50,9 @@ def nGame(bot, trigger):
         bot.say("unable to find team id")
     bot.say(msg)
 
-@module.commands('division')
+@module.commands('nhl_division')
 def divisionStandings(bot, trigger):
-    """ Grab standings for a division: Options: Metro(politan), Atlantic, Central, Pacific. usage: !division <full division name> """
+    """ Grab standings for a division: Options: Metro(politan), Atlantic, Central, Pacific. usage: !nhl_division <full division name> """
     tmpDiv = trigger.group(2)
     divName = tmpDiv.split()
     getStandings()
@@ -72,6 +72,21 @@ def currentGameScores(bot, trigger):
     """ Gets the scores of all games scheduled to start today """
     msg = getCurrentGameScores()
     bot.say(msg)
+
+@module.commands('nhl_abbreviation')
+def getAbbrToFullname(bot, trigger):
+	""" Get the full name of a 3 letter abbreviation. usage: !nhl_abbreviation WPG """ 
+	try:
+		tmpAbbr = trigger.group(2)
+		divAbbr = tmpAbbr.split()
+		fullName = abbrToFullname(divAbbr[0])
+		if fullName is False:
+			msg = "failure to chooch: specify a correct 3 letter abbreviation"
+		else:
+			msg = "%s = %s" % (divAbbr[0].upper(), fullName)
+		bot.say(msg)
+	except:
+		bot.say("failure to chooch")
 
 # team stats (gp, win, loss, ot)
 def getTeamStats(teamid):
@@ -203,13 +218,52 @@ def getTeamId(abbreviation):
             "ARI" : 53,
             "VGK" : 54
             }
+    team = abbreviation.upper()
 
-    team = abbreviation
-
-    if team.upper() in teams:
+    if team in teams:
         return teams[team.upper()] 
     else:
         return false
+
+# convert 3 letter abbreviations to full names
+def abbrToFullname(abbr):
+    teams = {
+            "NJD" : "New Jersey Devils",
+            "NYI" : "New York Islanders",
+            "NYR" : "New York Rangers",
+            "PHI" : "Philladelphia Flyers",
+            "PIT" : "Pittsburgh Penguins",
+            "BOS" : "Boston Bruins",
+            "BUF" : "Buffalo Sabbres",
+            "MTL" : "Montreal Canadiens",
+            "OTT" : "Ottowa Senators",
+            "TOR" : "Toronto Maple Leafs",
+            "CAR" : "Carolina Hurricanes",
+            "FLA" : "Florida Panthers",
+            "TBL" : "Tampa Bay Lightning",
+            "WSH" : "Washington Capitals",
+            "CHI" : "Chicago Blackhawks",
+            "DET" : "Detroit Red Wings",
+            "NSH" : "Nashville Predators",
+            "STL" : "St. Louis Blues",
+            "CGY" : "Calgary Flames",
+            "COL" : "Colorado Avalanche",
+            "EDM" : "Edmonton Oilers",
+            "VAN" : "Vancouver Canucks",
+            "ANA" : "Anaheim Ducks",
+            "DAL" : "Dallas Stars",
+            "LAK" : "Los Angeles Kings",
+            "SJS" : "San Jose Sharkes",
+            "CBJ" : "Columbus Blue Jackets",
+            "MIN" : "Minnesota Wild",
+            "WPG" : "Winnipeg Jets",
+            "ARI" : "Arizona Coyotes",
+            "VGK" : "Vegas Golden Knights"
+            }
+    if abbr.upper() in teams.keys():
+        return teams[abbr.upper()]
+    else:
+        return False
 
 # get division id value
 def getDivisionId(division):
@@ -299,7 +353,7 @@ def getCurrentGameScores():
             team_home_score = game['teams']['home']['score']
             team_away_abbr = getTeamAbbr(team_away_id)
             team_home_abbr = getTeamAbbr(team_home_id)
-            msg = "%s@%s" % (team_away_abbr, team_home_abbr)
+            msg = "\x02%s\x02@\x02%s\x02" % (team_away_abbr, team_home_abbr)
             print("other:"+msg)
         if i == 0:
             ret += msg
