@@ -5,6 +5,7 @@ import requests
 import json
 import arrow
 
+@module.rate(20)
 @module.commands('nhl_teamstats')
 def teamStats(bot, trigger):
     """ Gets team stats including games played, wins, losses ot. usage: !nhl_teamstats WSH """
@@ -19,7 +20,8 @@ def teamStats(bot, trigger):
     except:
         bot.say("unable to find team id")
     bot.say(msg)
-
+    
+@module.rate(20)
 @module.commands('nhl_lastgame')
 def pGame(bot, trigger):
     """ Gets last game information for a team. usage: !nhl_lastgame TOR """
@@ -35,6 +37,7 @@ def pGame(bot, trigger):
         bot.say("unable to find team id")
     bot.say(msg)
 
+@module.rate(20)
 @module.commands('nhl_nextgame')
 def nGame(bot, trigger):
     """ Gets next game information for a team. usage: !nhl_nextgame MTL """
@@ -50,6 +53,7 @@ def nGame(bot, trigger):
         bot.say("unable to find team id")
     bot.say(msg)
 
+@module.rate(20)
 @module.commands('nhl_division')
 def divisionStandings(bot, trigger):
     """ Grab standings for a division: Options: Metro(politan), Atlantic, Central, Pacific. usage: !nhl_division <full division name> """
@@ -67,12 +71,14 @@ def divisionStandings(bot, trigger):
         msg = "Options: Metro(politan), Atlantic, Central, Pacific"
     bot.say(msg)
 
+@module.rate(20)
 @module.commands('nhl_games')
 def currentGameScores(bot, trigger):
     """ Gets the scores of all games scheduled to start today """
     msg = getCurrentGameScores()
     bot.say(msg)
 
+@module.rate(20)
 @module.commands('nhl_abbreviation')
 def getAbbrToFullname(bot, trigger):
 	""" Get the full name of a 3 letter abbreviation. usage: !nhl_abbreviation WPG """ 
@@ -345,6 +351,7 @@ def getCurrentGameScores():
             print("final:"+msg)
         else:
             game_state = game['status']['detailedState']
+            game_time = game['gameDate']
             team_away_name = game['teams']['away']['team']['name']
             team_home_name = game['teams']['home']['team']['name']
             team_away_id = game['teams']['away']['team']['id']
@@ -353,7 +360,9 @@ def getCurrentGameScores():
             team_home_score = game['teams']['home']['score']
             team_away_abbr = getTeamAbbr(team_away_id)
             team_home_abbr = getTeamAbbr(team_home_id)
-            msg = "\x02%s\x02@\x02%s\x02" % (team_away_abbr, team_home_abbr)
+            a_game_time = arrow.get(game_time)
+            game_time_local = a_game_time.to('US/Eastern').format('HHmm')
+            msg = "\x02%s\x02@\x02%s\x02 at %s EST" % (team_away_abbr, team_home_abbr, game_time_local)
             print("other:"+msg)
         if i == 0:
             ret += msg
